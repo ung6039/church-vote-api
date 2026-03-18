@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>교회 투표 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0b;
+    --surface: #1a1814;
+    --card: #211f1a;
+    --border: #3a3628;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --gold-dim: #7a6530;
+    --cream: #f0ead8;
+    --text: #e8e0cc;
+    --muted: #8a8070;
+    --accent: #4a7c59;
+    --accent-light: #6aad80;
+    --danger: #b85c4a;
+    --r: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Cross background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(255,255,255,0.015) 60px),
+      repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(255,255,255,0.015) 60px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 52px 0 36px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .cross-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px; height: 52px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .cross-icon::before {
+    content: '✝';
+    font-size: 36px;
+    color: var(--gold);
+    filter: drop-shadow(0 0 12px rgba(201,168,76,0.4));
+    animation: glow 3s ease-in-out infinite;
+  }
+  @keyframes glow {
+    0%,100% { filter: drop-shadow(0 0 8px rgba(201,168,76,0.3)); }
+    50%      { filter: drop-shadow(0 0 20px rgba(201,168,76,0.6)); }
+  }
+
+  header h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 700;
+    color: var(--cream);
+    letter-spacing: 0.06em;
+  }
+  header p {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 4px;
+    margin-bottom: 32px;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .25s;
+    letter-spacing: 0.03em;
+  }
+  .tab.active {
+    background: var(--card);
+    color: var(--gold);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 28px;
+    margin-bottom: 20px;
+    transition: border-color .3s;
+  }
+  .card:hover { border-color: var(--gold-dim); }
+
+  .card-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 16px;
+    background: var(--gold);
+    border-radius: 2px;
+  }
+
+  /* ── Forms ── */
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Noto Sans KR', sans-serif;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold-dim);
+  }
+  select option { background: var(--surface); }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+    letter-spacing: 0.03em;
+  }
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: #1a1500;
+  }
+  .btn-gold:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .btn-danger {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+  }
+  .btn-danger:hover { background: rgba(184,92,74,0.15); }
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  /* ── Badge / Pills ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .badge-active { background: rgba(74,124,89,0.2); color: var(--accent-light); border: 1px solid rgba(74,124,89,0.4); }
+  .badge-closed { background: rgba(138,128,112,0.15); color: var(--muted); border: 1px solid var(--border); }
+  .badge-gold   { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+
+  /* ── Candidate row ── */
+  .candidate-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .candidate-row input { margin-bottom: 0; }
+  .candidate-row .btn { flex-shrink: 0; }
+
+  /* ── Voter login ── */
+  #voterSection { display: none; }
+
+  /* ── Vote options ── */
+  .vote-option {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .vote-option:hover { border-color: var(--gold-dim); background: rgba(201,168,76,0.04); }
+  .vote-option.selected {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.08);
+  }
+  .vote-option.selected::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--gold);
+  }
+  .vote-radio {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s;
+  }
+  .vote-option.selected .vote-radio {
+    border-color: var(--gold);
+    background: var(--gold);
+  }
+  .vote-option.selected .vote-radio::after {
+    content: '';
+    width: 8px; height: 8px;
+    background: #1a1500;
+    border-radius: 50%;
+  }
+  .vote-name { font-size: 15px; font-weight: 500; color: var(--cream); }
+  .vote-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Results bars ── */
+  .result-item { margin-bottom: 18px; }
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .result-name { color: var(--cream); font-weight: 500; }
+  .result-count { color: var(--gold); font-weight: 600; }
+  .result-bar-bg {
+    height: 8px;
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .result-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    border-radius: 4px;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    width: 0;
+  }
+  .result-bar.winner { background: linear-gradient(90deg, var(--accent), var(--accent-light)); }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-number {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.04em; }
+
+  /* ── Session list ── */
+  .session-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .session-item:last-child { border-bottom: none; }
+  .session-info { flex: 1; min-width: 0; }
+  .session-name { font-size: 14px; font-weight: 500; color: var(--cream); }
+  .session-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .session-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* ── Success overlay ── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .overlay.show { display: flex; }
+  .overlay-box {
+    background: var(--card);
+    border: 1px solid var(--gold-dim);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+    animation: popIn .35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .overlay-icon { font-size: 48px; margin-bottom: 16px; }
+  .overlay-title { font-family: 'Noto Serif KR', serif; font-size: 20px; color: var(--cream); margin-bottom: 8px; }
+  .overlay-sub { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ── Alert ── */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .alert.show { display: block; }
+  .alert-warn { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); color: var(--gold-light); }
+  .alert-err  { background: rgba(184,92,74,0.1);  border: 1px solid rgba(184,92,74,0.3);  color: #e07060; }
+  .alert-ok   { background: rgba(74,124,89,0.1);  border: 1px solid rgba(74,124,89,0.3);  color: var(--accent-light); }
+
+  /* ── Misc ── */
+  .flex-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .mt8  { margin-top: 8px; }
+  .mt16 { margin-top: 16px; }
+  .mt24 { margin-top: 24px; }
+  .hidden { display: none !important; }
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ── PIN modal ── */
+  #pinModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #pinModal.show { display: flex; }
+  .pin-box {
+    background: var(--card);
+    border: 1px solid var(--gold-dim);
+    border-radius: 16px;
+    padding: 36px;
+    width: 90%;
+    max-width: 360px;
+    text-align: center;
+  }
+  .pin-box h2 { font-family: 'Noto Serif KR', serif; font-size: 18px; margin-bottom: 6px; color: var(--cream); }
+  .pin-box p  { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  .pin-input  { text-align: center; font-size: 22px; letter-spacing: 8px; }
+
+  @media(max-width: 600px) {
+    .stats-row { grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .stat-number { font-size: 22px; }
+    .tabs .tab { font-size: 11px; padding: 9px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PIN Modal -->
+<div id="pinModal">
+  <div class="pin-box">
+    <div style="font-size:36px;margin-bottom:12px">🔐</div>
+    <h2>관리자 인증</h2>
+    <p>관리자 PIN을 입력하세요<br><small style="color:var(--gold)">(기본값: 1234)</small></p>
+    <input class="pin-input" type="password" id="pinInput" maxlength="6" placeholder="••••">
+    <div id="pinAlert" class="alert alert-err">PIN이 올바르지 않습니다.</div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-outline" style="flex:1" onclick="closePinModal()">취소</button>
+      <button class="btn btn-gold" style="flex:1" onclick="checkPin()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- Success Overlay -->
+<div class="overlay" id="successOverlay">
+  <div class="overlay-box">
+    <div class="overlay-icon">🙏</div>
+    <div class="overlay-title">투표가 완료되었습니다</div>
+    <div class="overlay-sub" id="successMsg">소중한 한 표를 주셔서 감사합니다.<br>결과는 투표 종료 후 공개됩니다.</div>
+    <button class="btn btn-gold mt24" style="width:100%" onclick="closeOverlay()">확인</button>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <div class="cross-icon"></div>
+    <h1>교회 투표 시스템</h1>
+    <p>Church Voting System · 은혜로운 결정을 위한 투명한 선거</p>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('voter')">🗳️ 투표하기</div>
+    <div class="tab" onclick="requestAdmin('result')">📊 결과 보기</div>
+    <div class="tab" onclick="requestAdmin('admin')">⚙️ 관리자</div>
+  </div>
+
+  <!-- ══════════════════ VOTER TAB ══════════════════ -->
+  <div id="tab-voter">
+    <!-- Step 1: Select session -->
+    <div class="card" id="sessionSelectCard">
+      <div class="card-title">진행 중인 투표 선택</div>
+      <div id="activeSessionList">
+        <p style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">
+          현재 진행 중인 투표가 없습니다.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 2: Voter auth -->
+    <div class="card hidden" id="voterAuthCard">
+      <div class="card-title">본인 확인</div>
+      <div id="voterAlert" class="alert alert-err"></div>
+      <label>이름</label>
+      <input type="text" id="voterName" placeholder="성함을 입력하세요">
+      <label>등록번호 (또는 생년월일 6자리)</label>
+      <input type="text" id="voterCode" placeholder="예) 800101" maxlength="10">
+      <button class="btn btn-gold" style="width:100%" onclick="authVoter()">본인 확인</button>
+    </div>
+
+    <!-- Step 3: Vote -->
+    <div class="card hidden" id="voteCastCard">
+      <div class="card-title" id="voteCardTitle">후보 선택</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:20px" id="voteInstruction"></p>
+      <div id="voteOptionsList"></div>
+      <div id="voteAlert" class="alert alert-warn"></div>
+      <div class="flex-between mt16">
+        <button class="btn btn-outline" onclick="resetVoteUI()">← 돌아가기</button>
+        <button class="btn btn-gold" id="submitVoteBtn" onclick="submitVote()">투표하기 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ RESULT TAB ══════════════════ -->
+  <div id="tab-result" class="hidden">
+    <div class="card">
+      <div class="card-title">투표 결과</div>
+      <label>투표 세션 선택</label>
+      <select id="resultSessionSelect" onchange="showResults()">
+        <option value="">-- 세션을 선택하세요 --</option>
+      </select>
+      <div id="resultContent">
+        <p style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0">세션을 선택하면 결과가 표시됩니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ ADMIN TAB ══════════════════ -->
+  <div id="tab-admin" class="hidden">
+
+    <!-- Create session -->
+    <div class="card">
+      <div class="card-title">새 투표 세션 만들기</div>
+      <label>투표 제목</label>
+      <input type="text" id="adminTitle" placeholder="예) 2025년도 장로 선출">
+      <label>직분</label>
+      <select id="adminRole">
+        <option>장로</option>
+        <option>권사</option>
+        <option>집사</option>
+        <option>안수집사</option>
+        <option>임원 (회장/부회장)</option>
+        <option>기타</option>
+      </select>
+      <label>투표 방식</label>
+      <select id="adminVoteType">
+        <option value="single">단수 선택 (1명)</option>
+        <option value="multi">복수 선택</option>
+        <option value="yesno">찬반 투표</option>
+      </select>
+      <div id="maxPickWrap" class="hidden">
+        <label>최대 선택 인원</label>
+        <input type="number" id="adminMaxPick" value="2" min="1" max="20">
+      </div>
+
+      <div class="divider"></div>
+      <label>후보자 목록</label>
+      <div id="candidateList"></div>
+      <button class="btn btn-outline btn-sm mt8" onclick="addCandidateRow()">+ 후보자 추가</button>
+
+      <div class="divider"></div>
+      <label>투표자 명부 (이름,등록번호 형식, 줄바꿈 구분)</label>
+      <textarea id="voterList" rows="5" placeholder="홍길동,800101&#10;김철수,900202&#10;이영희,751231"></textarea>
+
+      <div id="adminCreateAlert" class="alert alert-err"></div>
+      <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="createSession()">투표 세션 생성</button>
+    </div>
+
+    <!-- Manage sessions -->
+    <div class="card">
+      <div class="card-title">투표 세션 관리</div>
+      <div id="adminSessionList">
+        <p style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0">생성된 세션이 없습니다.</p>
+      </div>
+    </div>
+
+    <!-- Admin PIN change -->
+    <div class="card">
+      <div class="card-title">관리자 설정</div>
+      <label>현재 PIN</label>
+      <input type="password" id="curPin" placeholder="현재 PIN">
+      <label>새 PIN</label>
+      <input type="password" id="newPin" placeholder="새 PIN (4~6자리)">
+      <div id="pinChangeAlert" class="alert"></div>
+      <button class="btn btn-outline" onclick="changePin()">PIN 변경</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let state = {
+  pin: '1234',
+  sessions: [],          // { id, title, role, voteType, maxPick, candidates, voters, votes, status }
+  activeTab: 'voter',
+  selectedSessionId: null,
+  currentVoterKey: null, // "name_code"
+};
+
+let pendingTab = null;
+
+/* ══════════════════════════════════════════
+   PERSISTENCE
+══════════════════════════════════════════ */
+function save() {
+  try { localStorage.setItem('churchVote', JSON.stringify(state)); } catch(e) {}
+}
+function load() {
+  try {
+    const d = localStorage.getItem('churchVote');
+    if (d) state = Object.assign(state, JSON.parse(d));
+  } catch(e) {}
+}
+
+/* ══════════════════════════════════════════
+   TABS
+══════════════════════════════════════════ */
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['voter','result','admin'][i] === tab);
+  });
+  ['voter','result','admin'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
+  });
+  if (tab === 'result') renderResultSelect();
+  if (tab === 'admin')  renderAdminSessions();
+  if (tab === 'voter')  renderActiveSessions();
+}
+
+function requestAdmin(tab) {
+  pendingTab = tab;
+  showPinModal();
+}
+
+/* ══════════════════════════════════════════
+   PIN MODAL
+══════════════════════════════════════════ */
+function showPinModal() {
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinAlert').classList.remove('show');
+  document.getElementById('pinModal').classList.add('show');
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+function closePinModal() {
+  document.getElementById('pinModal').classList.remove('show');
+}
+function checkPin() {
+  const v = document.getElementById('pinInput').value;
+  if (v === state.pin) {
+    closePinModal();
+    switchTab(pendingTab);
+  } else {
+    document.getElementById('pinAlert').classList.add('show');
+    document.getElementById('pinInput').value = '';
+  }
+}
+document.getElementById('pinInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPin(); });
+
+function changePin() {
+  const cur = document.getElementById('curPin').value;
+  const nw  = document.getElementById('newPin').value;
+  const al  = document.getElementById('pinChangeAlert');
+  al.className = 'alert';
+  if (cur !== state.pin) { al.classList.add('show','alert-err'); al.textContent='현재 PIN이 틀립니다.'; return; }
+  if (!/^\d{4,6}$/.test(nw)) { al.classList.add('show','alert-err'); al.textContent='PIN은 4~6자리 숫자여야 합니다.'; return; }
+  state.pin = nw;
+  save();
+  al.classList.add('show','alert-ok'); al.textContent='PIN이 변경되었습니다.';
+}
+
+/* ══════════════════════════════════════════
+   CANDIDATE ROWS
+══════════════════════════════════════════ */
+function addCandidateRow(name='', desc='') {
+  const wrap = document.getElementById('candidateList');
+  const div = document.createElement('div');
+  div.className = 'candidate-row';
+  div.innerHTML = `
+    <input type="text" placeholder="이름" value="${name}" style="flex:1;margin:0">
+    <input type="text" placeholder="직분/설명 (선택)" value="${desc}" style="flex:1.5;margin:0">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>
+  `;
+  wrap.appendChild(div);
+}
+
+/* ══════════════════════════════════════════
+   CREATE SESSION
+══════════════════════════════════════════ */
+function createSession() {
+  const title    = document.getElementById('adminTitle').value.trim();
+  const role     = document.getElementById('adminRole').value;
+  const voteType = document.getElementById('adminVoteType').value;
+  const maxPick  = parseInt(document.getElementById('adminMaxPick').value) || 1;
+  const voterRaw = document.getElementById('voterList').value.trim();
+  const al       = document.getElementById('adminCreateAlert');
+
+  al.className = 'alert';
+
+  if (!title) { al.classList.add('show','alert-err'); al.textContent='투표 제목을 입력하세요.'; return; }
+
+  // Parse candidates
+  const rows = [...document.querySelectorAll('#candidateList .candidate-row')];
+  let candidates = [];
+  if (voteType === 'yesno') {
+    candidates = [{id:'yes',name:'찬성',desc:''},{id:'no',name:'반대',desc:''},{id:'abs',name:'기권',desc:''}];
+  } else {
+    candidates = rows.map(r => {
+      const inputs = r.querySelectorAll('input');
+      return { id: 'c_'+Math.random().toString(36).slice(2), name: inputs[0].value.trim(), desc: inputs[1].value.trim() };
+    }).filter(c => c.name);
+    if (candidates.length < 2) { al.classList.add('show','alert-err'); al.textContent='후보자를 2명 이상 입력하세요.'; return; }
+  }
+
+  // Parse voters
+  const voters = {};
+  voterRaw.split('\n').forEach(line => {
+    const parts = line.split(',');
+    if (parts.length >= 2) {
+      const key = parts[0].trim() + '_' + parts[1].trim();
+      voters[key] = false; // false = hasn't voted
+    }
+  });
+  if (Object.keys(voters).length === 0) { al.classList.add('show','alert-err'); al.textContent='투표자 명부를 입력하세요.'; return; }
+
+  const session = {
+    id: 'S_'+Date.now(),
+    title, role, voteType,
+    maxPick: voteType === 'multi' ? maxPick : 1,
+    candidates,
+    voters,
+    votes: {},  // candidateId -> count
+    status: 'active',
+    createdAt: new Date().toLocaleString('ko-KR'),
+  };
+  candidates.forEach(c => { session.votes[c.id] = 0; });
+
+  state.sessions.unshift(session);
+  save();
+
+  // Reset form
+  document.getElementById('adminTitle').value = '';
+  document.getElementById('candidateList').innerHTML = '';
+  document.getElementById('voterList').value = '';
+  al.classList.add('show','alert-ok'); al.textContent = `"${title}" 세션이 생성되었습니다.`;
+
+  renderAdminSessions();
+  renderActiveSessions();
+}
+
+/* ══════════════════════════════════════════
+   ADMIN SESSIONS
+══════════════════════════════════════════ */
+function renderAdminSessions() {
+  const wrap = document.getElementById('adminSessionList');
+  if (!state.sessions.length) {
+    wrap.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0">생성된 세션이 없습니다.</p>';
+    return;
+  }
+  wrap.innerHTML = state.sessions.map(s => {
+    const total = Object.keys(s.voters).length;
+    const voted = Object.values(s.voters).filter(Boolean).length;
+    return `
+    <div class="session-item">
+      <div class="session-info">
+        <div class="session-name">${s.title} <span class="badge ${s.status==='active'?'badge-active':'badge-closed'}">${s.status==='active'?'진행 중':'종료'}</span></div>
+        <div class="session-meta">${s.role} · ${s.createdAt} · 참여 ${voted}/${total}명</div>
+      </div>
+      <div class="session-actions">
+        ${s.status==='active'
+          ? `<button class="btn btn-danger btn-sm" onclick="closeSession('${s.id}')">종료</button>`
+          : `<span class="badge badge-closed">종료됨</span>`}
+        <button class="btn btn-outline btn-sm" onclick="deleteSession('${s.id}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function closeSession(id) {
+  const s = state.sessions.find(x=>x.id===id);
+  if (!s) return;
+  if (!confirm(`"${s.title}" 투표를 종료하시겠습니까?`)) return;
+  s.status = 'closed';
+  save();
+  renderAdminSessions();
+  renderActiveSessions();
+}
+
+function deleteSession(id) {
+  const s = state.sessions.find(x=>x.id===id);
+  if (!s) return;
+  if (!confirm(`"${s.title}" 세션을 삭제하시겠습니까?`)) return;
+  state.sessions = state.sessions.filter(x=>x.id!==id);
+  save();
+  renderAdminSessions();
+  renderActiveSessions();
+}
+
+/* ══════════════════════════════════════════
+   VOTER FLOW
+══════════════════════════════════════════ */
+function renderActiveSessions() {
+  const wrap = document.getElementById('activeSessionList');
+  const active = state.sessions.filter(s=>s.status==='active');
+  if (!active.length) {
+    wrap.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">현재 진행 중인 투표가 없습니다.</p>';
+    return;
+  }
+  wrap.innerHTML = active.map(s => {
+    const total = Object.keys(s.voters).length;
+    const voted = Object.values(s.voters).filter(Boolean).length;
+    return `
+    <div class="session-item" style="cursor:pointer" onclick="selectSession('${s.id}')">
+      <div class="session-info">
+        <div class="session-name">${s.title} <span class="badge badge-active">진행 중</span></div>
+        <div class="session-meta">${s.role} · 참여 ${voted}/${total}명</div>
+      </div>
+      <button class="btn btn-gold btn-sm">참여 →</button>
+    </div>`;
+  }).join('');
+}
+
+function selectSession(id) {
+  state.selectedSessionId = id;
+  save();
+  document.getElementById('sessionSelectCard').classList.add('hidden');
+  document.getElementById('voterAuthCard').classList.remove('hidden');
+  document.getElementById('voterAlert').classList.remove('show');
+  document.getElementById('voterName').value = '';
+  document.getElementById('voterCode').value = '';
+}
+
+function authVoter() {
+  const name = document.getElementById('voterName').value.trim();
+  const code = document.getElementById('voterCode').value.trim();
+  const al   = document.getElementById('voterAlert');
+  al.classList.remove('show');
+
+  if (!name || !code) { al.textContent='이름과 등록번호를 모두 입력하세요.'; al.classList.add('show'); return; }
+
+  const session = state.sessions.find(s=>s.id===state.selectedSessionId);
+  if (!session) return;
+
+  const key = name + '_' + code;
+  if (!(key in session.voters)) {
+    al.textContent = '투표자 명부에 등록되지 않은 정보입니다.';
+    al.classList.add('show');
+    return;
+  }
+  if (session.voters[key] === true) {
+    al.textContent = '이미 투표에 참여하셨습니다.';
+    al.classList.add('show');
+    return;
+  }
+
+  state.currentVoterKey = key;
+  showVoteCast(session);
+}
+
+function showVoteCast(session) {
+  document.getElementById('voterAuthCard').classList.add('hidden');
+  document.getElementById('voteCastCard').classList.remove('hidden');
+  document.getElementById('voteCardTitle').textContent = session.title;
+  document.getElementById('voteInstruction').textContent =
+    session.voteType === 'multi'
+      ? `최대 ${session.maxPick}명까지 선택할 수 있습니다.`
+      : session.voteType === 'yesno'
+      ? '찬성 또는 반대를 선택하세요.'
+      : '후보자 중 1명을 선택하세요.';
+
+  const list = document.getElementById('voteOptionsList');
+  list.innerHTML = session.candidates.map(c => `
+    <div class="vote-option" id="opt_${c.id}" onclick="toggleOption('${c.id}','${session.voteType}',${session.maxPick})">
+      <div class="vote-radio"></div>
+      <div>
+        <div class="vote-name">${c.name}</div>
+        ${c.desc ? `<div class="vote-desc">${c.desc}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('voteAlert').classList.remove('show');
+}
+
+let selectedOptions = new Set();
+
+function toggleOption(id, type, max) {
+  if (type === 'single' || type === 'yesno') {
+    selectedOptions.clear();
+    document.querySelectorAll('.vote-option').forEach(el => el.classList.remove('selected'));
+    selectedOptions.add(id);
+    document.getElementById('opt_'+id).classList.add('selected');
+  } else {
+    if (selectedOptions.has(id)) {
+      selectedOptions.delete(id);
+      document.getElementById('opt_'+id).classList.remove('selected');
+    } else {
+      if (selectedOptions.size >= max) {
+        const al = document.getElementById('voteAlert');
+        al.textContent = `최대 ${max}명까지만 선택할 수 있습니다.`;
+        al.classList.add('show');
+        return;
+      }
+      selectedOptions.add(id);
+      document.getElementById('opt_'+id).classList.add('selected');
+    }
+    document.getElementById('voteAlert').classList.remove('show');
+  }
+}
+
+function submitVote() {
+  if (selectedOptions.size === 0) {
+    const al = document.getElementById('voteAlert');
+    al.textContent = '후보자를 선택해주세요.';
+    al.classList.add('show');
+    return;
+  }
+
+  const session = state.sessions.find(s=>s.id===state.selectedSessionId);
+  if (!session) return;
+
+  selectedOptions.forEach(id => { session.votes[id]++; });
+  session.voters[state.currentVoterKey] = true;
+  save();
+
+  selectedOptions.clear();
+  resetVoteUI();
+
+  const total = Object.keys(session.voters).length;
+  const voted = Object.values(session.voters).filter(Boolean).length;
+  document.getElementById('successMsg').innerHTML =
+    `소중한 한 표를 주셔서 감사합니다.<br>현재까지 <strong style="color:var(--gold)">${voted}/${total}명</strong>이 참여하셨습니다.`;
+  document.getElementById('successOverlay').classList.add('show');
+}
+
+function resetVoteUI() {
+  selectedOptions.clear();
+  state.selectedSessionId = null;
+  state.currentVoterKey = null;
+  document.getElementById('voteCastCard').classList.add('hidden');
+  document.getElementById('voterAuthCard').classList.add('hidden');
+  document.getElementById('sessionSelectCard').classList.remove('hidden');
+  renderActiveSessions();
+}
+
+function closeOverlay() {
+  document.getElementById('successOverlay').classList.remove('show');
+}
+
+/* ══════════════════════════════════════════
+   RESULTS
+══════════════════════════════════════════ */
+function renderResultSelect() {
+  const sel = document.getElementById('resultSessionSelect');
+  sel.innerHTML = '<option value="">-- 세션을 선택하세요 --</option>';
+  state.sessions.forEach(s => {
+    sel.innerHTML += `<option value="${s.id}">${s.title} (${s.status==='active'?'진행 중':'종료'})</option>`;
+  });
+  showResults();
+}
+
+function showResults() {
+  const id = document.getElementById('resultSessionSelect').value;
+  const wrap = document.getElementById('resultContent');
+  if (!id) { wrap.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0">세션을 선택하면 결과가 표시됩니다.</p>'; return; }
+
+  const s = state.sessions.find(x=>x.id===id);
+  if (!s) return;
+
+  const total = Object.keys(s.voters).length;
+  const voted = Object.values(s.voters).filter(Boolean).length;
+  const totalVotes = Object.values(s.votes).reduce((a,b)=>a+b,0);
+
+  // Find winner(s)
+  const maxVote = Math.max(...Object.values(s.votes));
+
+  const bars = s.candidates.map(c => {
+    const pct = totalVotes > 0 ? Math.round(s.votes[c.id]/totalVotes*100) : 0;
+    const isWinner = s.votes[c.id] === maxVote && maxVote > 0;
+    return `
+    <div class="result-item">
+      <div class="result-header">
+        <span class="result-name">${c.name} ${isWinner && s.status==='closed' ? '👑' : ''}</span>
+        <span class="result-count">${s.votes[c.id]}표 (${pct}%)</span>
+      </div>
+      <div class="result-bar-bg">
+        <div class="result-bar ${isWinner&&s.status==='closed'?'winner':''}" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-number">${total}</div><div class="stat-label">전체 유권자</div></div>
+      <div class="stat-box"><div class="stat-number">${voted}</div><div class="stat-label">투표 완료</div></div>
+      <div class="stat-box"><div class="stat-number">${total>0?Math.round(voted/total*100):0}%</div><div class="stat-label">투표율</div></div>
+    </div>
+    <div class="divider"></div>
+    ${s.status==='active'?'<div class="alert alert-warn show" style="margin-bottom:16px">⚠️ 투표가 진행 중입니다. 현재까지의 중간 집계입니다.</div>':''}
+    ${bars}
+    ${s.status==='closed'&&maxVote>0?`<div class="alert alert-ok show" style="margin-top:16px">✅ 투표가 종료되었습니다. 최다 득표자: <strong>${s.candidates.filter(c=>s.votes[c.id]===maxVote).map(c=>c.name).join(', ')}</strong></div>`:''}
+  `;
+
+  // Animate bars
+  setTimeout(() => {
+    wrap.querySelectorAll('.result-bar').forEach(bar => {
+      bar.style.width = bar.style.width;
+    });
+  }, 50);
+}
+
+/* ══════════════════════════════════════════
+   ADMIN VOTE TYPE CHANGE
+══════════════════════════════════════════ */
+document.getElementById('adminVoteType').addEventListener('change', function() {
+  const isMulti = this.value === 'multi';
+  const isYesNo = this.value === 'yesno';
+  document.getElementById('maxPickWrap').classList.toggle('hidden', !isMulti);
+  document.getElementById('candidateList').classList.toggle('hidden', isYesNo);
+  document.querySelector('[onclick="addCandidateRow()"]').classList.toggle('hidden', isYesNo);
+});
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+load();
+addCandidateRow();
+addCandidateRow();
+renderActiveSessions();
+</script>
+</body>
+</html>
